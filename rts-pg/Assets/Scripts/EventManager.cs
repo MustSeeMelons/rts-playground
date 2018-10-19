@@ -4,6 +4,7 @@ using UnityEngine.Events;
 
 public class CEvents {
     public const string POINTER_MODE = "POINTER_MODE";
+    public const string BUILD = "BUILD";
     public const string MOUSE_POSITION = "MOUSE_POSITION";
     public const string CAMERA_MOVE = "CAMERA_MOVE";
 }
@@ -38,13 +39,22 @@ public class PositionMessage : BaseMessage {
     }
 }
 
-public class CameraMessage: BaseMessage {
+public class CameraMessage : BaseMessage {
     public Direction direction;
 
     public CameraMessage(Direction direction) {
         this.direction = direction;
     }
 }
+
+public class BuildMessage : BaseMessage {
+    public GameObject obj;
+
+    public BuildMessage(GameObject obj) {
+        this.obj = obj;
+    }
+}
+
 
 public class EventManager : MonoBehaviour {
 

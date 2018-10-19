@@ -12,7 +12,7 @@ public class TerrainGenerator : MonoBehaviour {
     private void OnEnable() {
         terrain = GetComponent<Terrain>();
         terrain.terrainData = GenerateTerrain(terrain.terrainData);
-        terrain.transform.position = new Vector3(-config.width / 2, -config.height, -config.depth / 2);
+        terrain.transform.position = new Vector3(-config.width / 2, 0, -config.depth / 2);
 
         List<NavMeshBuildSource> buildSources = new List<NavMeshBuildSource>();
 
@@ -28,7 +28,7 @@ public class TerrainGenerator : MonoBehaviour {
         NavMeshData navData = NavMeshBuilder.BuildNavMeshData(
             NavMesh.GetSettingsByID(0),
             buildSources,
-            new Bounds(new Vector3(0, -config.height, 0), new Vector3(config.width, config.height, config.depth)),
+            new Bounds(new Vector3(0, 0, 0), new Vector3(config.width, config.height, config.depth)),
             Vector3.zero,
             Quaternion.identity
         );

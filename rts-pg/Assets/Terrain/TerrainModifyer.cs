@@ -12,25 +12,9 @@ public class TerrainModifyer : MonoBehaviour {
     Vector3 lastMousePosition = Vector3.down;
     bool active = false;
 
-    // TODO extract to terrain helper
-    int[][] pattern = new int[][]{
-        new int[] {-1, -1},
-        new int[] {-1, 0},
-        new int[] {-1, 1},
-        new int[] {-1, 2},
-        new int[] {0, -1 },
-        new int[] {0, 0 },
-        new int[] {0, 1 },
-        new int[] {0, 2},
-        new int[] {1, -1},
-        new int[] {1, 0 },
-        new int[] {1, 1},
-        new int[] {1, 2},
-        new int[] {2, -1},
-        new int[] {2, 0},
-        new int[] {2, 1},
-        new int[] {2, 2},
-    };
+    Tuple[] pattern;
+    GameObject instansiatedBuilding;
+    Building currBuilding;
 
     private void Start() {
         terrain = GetComponent<Terrain>();
@@ -41,17 +25,41 @@ public class TerrainModifyer : MonoBehaviour {
     }
 
     private void OnEnable() {
-        EventManager.StartListening(CEvents.POINTER_MODE, OnPointerMode);
+        EventManager.StartListening(CEvents.BUILD, OnPointerMode);
         EventManager.StartListening(CEvents.MOUSE_POSITION, OnMousePosition);
     }
 
     private void OnDisable() {
-        EventManager.StopListening(CEvents.POINTER_MODE, OnPointerMode);
+        EventManager.StopListening(CEvents.BUILD, OnPointerMode);
         EventManager.StopListening(CEvents.MOUSE_POSITION, OnMousePosition);
+    }
+
+    private void Update() {
+        if (active) {
+            if (Input.GetMouseButtonDown(0)) {
+                active = false;
+                instansiatedBuilding = null;
+                defTerrainData = terrain.terrainData;
+            } else if (Input.GetMouseButtonDown(1)) {
+                terrain.terrainData = defTerrainData;
+                Destroy(instansiatedBuilding);
+            }
+        }
     }
 
     public void OnPointerMode(BaseMessage msg) {
         active = !active;
+        if (active) {
+            GameObject obj = (msg as BuildMessage).obj;
+
+            Building b = obj.GetComponent<Building>();
+            currBuilding = b;
+            pattern = b.buildingPattern.pattern.data;
+
+            instansiatedBuilding = Instantiate(obj, new Vector3(0, 0, 0), Quaternion.identity);
+        } else {
+            defTerrainData = terrain.terrainData;
+        }
     }
 
     public void OnMousePosition(BaseMessage msg) {
@@ -75,27 +83,30 @@ public class TerrainModifyer : MonoBehaviour {
 
         float value = CalculateAverageHeight(tx, tz);
 
-        foreach (int[] pat in pattern) {
-            int xVal = Mathf.Clamp(tx + pat[0], 0, terrainWidth);
-            int zVal = Mathf.Clamp(tz + pat[1], 0, terrainDepth);
+        foreach (Tuple pat in pattern) {
+            int xVal = Mathf.Clamp(tx + pat.x, 0, terrainWidth);
+            int zVal = Mathf.Clamp(tz + pat.z, 0, terrainDepth);
 
             terrainData.SetHeights(
            xVal,
            zVal,
-           new float[,] { { value } }
+           new float[,] { { value / config.height } }
            );
         }
 
         terrain.terrainData = terrainData;
+        instansiatedBuilding.transform.position = new Vector3(
+            position.x,
+            terrainData.GetHeight(tx, tz) + currBuilding.heightModifier,
+            position.z);
     }
 
     float CalculateAverageHeight(int x, int z) {
-        TerrainData data = defTerrainData;
+        TerrainData data = terrain.terrainData;
 
         float avg = 0;
-        foreach (int[] pat in pattern) {
-            // Terrain is lovered so the top is at y == 0
-            avg += -config.height / 2 + data.GetHeight(x + pat[0], z + pat[1]);
+        foreach (Tuple pat in pattern) {
+            avg += data.GetHeight(x + pat.x, z + pat.z);
         }
 
         return (float)avg / pattern.Length;

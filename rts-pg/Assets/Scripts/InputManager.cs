@@ -2,10 +2,10 @@
 
 public class InputManager : MonoBehaviour {
 
+    public GameObject townCenter;
+
     void Update() {
-        if (Input.GetKeyUp(KeyCode.Q)) {
-            EventManager.TriggerEvent(CEvents.POINTER_MODE, new BaseMessage());
-        }
+        // Camera movement
         if (Input.GetKey(KeyCode.W)) {
             EventManager.TriggerEvent(CEvents.CAMERA_MOVE, new CameraMessage(Direction.UP));
         }
